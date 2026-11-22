@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bảng tuần hoàn hóa học tương tác — Dự án STEM Tin học 12</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface-2: #162032;
+      --border: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --cell-w: 68px;
+      --cell-h: 76px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+
+    header h1 {
+      margin: 0 0 6px;
+      color: #38bdf8;
+      font-size: clamp(22px, 3.8vw, 32px);
+    }
+
+    header p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .controls {
+      max-width: 1180px;
+      margin: 0 auto 14px;
+    }
+
+    .search-box {
+      position: relative;
+      max-width: 560px;
+      margin: 0 auto 12px;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 12px 42px 12px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background-color: var(--surface);
+      color: var(--text);
+      font-size: 15px;
+      outline: none;
+    }
+
+    .search-box input:focus {
+      border-color: var(--accent);
+    }
+
+    .clear-btn {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-size: 18px;
+      cursor: pointer;
+      padding: 4px 8px;
+    }
+
+    .clear-btn:hover {
+      color: var(--text);
+    }
+
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 7px;
+    }
+
+    .filter-btn {
+      padding: 7px 13px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background-color: var(--surface);
+      color: var(--text);
+      font-size: 12.5px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .filter-btn:hover {
+      border-color: var(--accent);
+    }
+
+    .filter-btn.active {
+      background-color: #0284c7;
+      border-color: #38bdf8;
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    .status-bar {
+      max-width: 1180px;
+      margin: 0 auto 12px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      padding-bottom: 8px;
+      text-align: center;
+    }
+
+    table.periodic-table,
+    table.series-table {
+      border-collapse: separate;
+      border-spacing: 4px;
+      margin: 0 auto;
+    }
+
+    th.axis-col,
+    th.axis-row,
+    th.corner-cell {
+      background-color: var(--surface-2);
+      color: #94a3b8;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid #26354d;
+      border-radius: 6px;
+    }
+
+    th.axis-col {
+      width: var(--cell-w);
+      height: 30px;
+    }
+
+    th.axis-row {
+      width: 44px;
+      height: var(--cell-h);
+    }
+
+    th.corner-cell {
+      width: 44px;
+      height: 30px;
+      font-size: 10px;
+    }
+
+    td.el-td,
+    td.empty-td,
+    td.marker-td {
+      width: var(--cell-w);
+      height: var(--cell-h);
+      padding: 0;
+      vertical-align: top;
+    }
+
+    .marker-box {
+      width: 100%;
+      height: 100%;
+      border-radius: 7px;
+      border: 1px dashed #475569;
+      background-color: rgba(30, 41, 59, 0.5);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .cell {
+      width: 100%;
+      height: 100%;
+      border-radius: 7px;
+      padding: 4px 5px;
+      cursor: pointer;
+      color: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      text-align: left;
+      transition: transform 0.14s ease, opacity 0.18s ease, box-shadow 0.14s ease;
+    }
+
+    .cell:hover {
+      transform: translateY(-2px) scale(1.05);
+      z-index: 3;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.45);
+    }
+
+    .cell.dimmed {
+      opacity: 0.18;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .cell.highlighted {
+      outline: 2px solid #ffffff;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.9);
+    }
+
+    .num-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10.5px;
+      font-weight: 700;
+    }
+
+    .mass-mini {
+      font-size: 8.5px;
+      font-weight: 600;
+      opacity: 0.85;
+    }
+
+    .sym {
+      text-align: center;
+      font-size: 19px;
+      font-weight: 800;
+      line-height: 1.05;
+    }
+
+    .nam {
+      text-align: center;
+      font-size: 9.5px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    h3.series-title {
+      text-align: center;
+      color: #38bdf8;
+      margin: 22px 0 8px;
+      font-size: 15px;
+    }
+
+    /* Bảng màu phân loại nguyên tố (HEX / RGB) */
+    .alkali { background-color: #fca5a5; }      /* rgb(252, 165, 165) */
+    .alkaline { background-color: #fdba74; }    /* rgb(253, 186, 116) */
+    .transition { background-color: #fde68a; }  /* rgb(253, 230, 138) */
+    .post { background-color: #86efac; }        /* rgb(134, 239, 172) */
+    .metalloid { background-color: #a5f3fc; }   /* rgb(165, 243, 252) */
+    .nonmetal { background-color: #93c5fd; }    /* rgb(147, 197, 253) */
+    .halogen { background-color: #c4b5fd; }     /* rgb(196, 181, 253) */
+    .noble { background-color: #f9a8d4; }       /* rgb(249, 168, 212) */
+    .lanthanide { background-color: #d8b4fe; }  /* rgb(216, 180, 254) */
+    .actinide { background-color: #f0abfc; }    /* rgb(240, 171, 252) */
+
+    .legend {
+      max-width: 1180px;
+      margin: 22px auto 14px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 7px;
+    }
+
+    .legend span {
+      padding: 5px 11px;
+      border-radius: 999px;
+      color: #0f172a;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .stem-note {
+      max-width: 1180px;
+      margin: 0 auto 12px;
+      padding: 14px 18px;
+      border-radius: 12px;
+      background-color: var(--surface-2);
+      border: 1px solid var(--border);
+      font-size: 13px;
+      color: #cbd5e1;
+    }
+
+    .stem-note strong {
+      color: #38bdf8;
+    }
+
+    /* Modal chi tiết nguyên tố */
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background-color: rgba(2, 6, 23, 0.82);
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+      z-index: 30;
+    }
+
+    .overlay.open {
+      display: flex;
+    }
+
+    .modal {
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      padding: 22px;
+      border-radius: 16px;
+      max-width: 480px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.65);
+    }
+
+    .modal-top {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .big-badge {
+      width: 72px;
+      height: 72px;
+      border-radius: 12px;
+      color: #0f172a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .big-badge span:first-child {
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .big-badge strong {
+      font-size: 28px;
+      line-height: 1.05;
+    }
+
+    .modal h2 {
+      margin: 0 0 3px;
+      color: #38bdf8;
+      font-size: 21px;
+    }
+
+    .modal .en-name {
+      color: var(--muted);
+      font-size: 13.5px;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+      margin-bottom: 14px;
+      font-size: 13px;
+    }
+
+    .info-item {
+      background-color: var(--bg);
+      padding: 9px 11px;
+      border-radius: 9px;
+      border: 1px solid #1e293b;
+    }
+
+    .info-item label {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      margin-bottom: 2px;
+    }
+
+    .info-item value {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .prop-box {
+      background-color: var(--bg);
+      border-radius: 10px;
+      padding: 11px 13px;
+      margin-bottom: 10px;
+      font-size: 13px;
+      color: #e2e8f0;
+      border: 1px solid #26354d;
+    }
+
+    .prop-box.phys {
+      border-left: 4px solid #38bdf8;
+    }
+
+    .prop-box.chem {
+      border-left: 4px solid #fbbf24;
+    }
+
+    .prop-box strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 12.5px;
+      letter-spacing: 0.2px;
+    }
+
+    .prop-box.phys strong {
+      color: #38bdf8;
+    }
+
+    .prop-box.chem strong {
+      color: #fbbf24;
+    }
+
+    .close-btn {
+      width: 100%;
+      margin-top: 6px;
+      padding: 10px;
+      border: none;
+      border-radius: 10px;
+      background-color: #0284c7;
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .close-btn:hover {
+      background-color: #0369a1;
+    }
+
+    @media (max-width: 600px) {
+      :root {
+        --cell-w: 54px;
+        --cell-h: 64px;
+      }
+      body {
+        padding: 10px;
+      }
+      th.axis-row,
+      th.corner-cell {
+        width: 34px;
+      }
+      .sym {
+        font-size: 15px;
+      }
+      .nam {
+        font-size: 8.5px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>⚛ BẢNG TUẦN HOÀN CÁC NGUYÊN TỐ HÓA HỌC</h1>
+    <p>Nhấp vào từng nguyên tố để xem tính chất vật lý và tính chất hóa học riêng</p>
+  </header>
+
+  <section class="controls">
+    <div class="search-box">
+      <input id="search" type="text" placeholder="🔍 Tìm tên (Việt/Anh), ký hiệu hoặc số nguyên tử (1–118)..." autocomplete="off" />
+      <button class="clear-btn" id="clearSearch" title="Xóa tìm kiếm">×</button>
+    </div>
+
+    <div class="filters" id="filters">
+      <button class="filter-btn active" data-cat="all">Tất cả (118)</button>
+      <button class="filter-btn" data-cat="alkali">Kim loại kiềm</button>
+      <button class="filter-btn" data-cat="alkaline">Kim loại kiềm thổ</button>
+      <button class="filter-btn" data-cat="transition">Kim loại chuyển tiếp</button>
+      <button class="filter-btn" data-cat="post">Kim loại sau chuyển tiếp</button>
+      <button class="filter-btn" data-cat="metalloid">Á kim</button>
+      <button class="filter-btn" data-cat="nonmetal">Phi kim</button>
+      <button class="filter-btn" data-cat="halogen">Halogen</button>
+      <button class="filter-btn" data-cat="noble">Khí hiếm</button>
+      <button class="filter-btn" data-cat="lanthanide">Họ Lantan</button>
+      <button class="filter-btn" data-cat="actinide">Họ Actini</button>
+    </div>
+  </section>
+
+  <div class="status-bar" id="statusBar">Đang khớp 118 / 118 nguyên tố</div>
+
+  <div class="table-wrap">
+    <table class="periodic-table" id="periodicTable" aria-label="Bảng tuần hoàn hóa học"></table>
+  </div>
+
+  <h3 class="series-title">Họ Lantan (Chu kỳ 6, Z = 57–71)</h3>
+  <div class="table-wrap">
+    <table class="series-table" id="lanthTable" aria-label="Họ Lantan"></table>
+  </div>
+
+  <h3 class="series-title">Họ Actini (Chu kỳ 7, Z = 89–103)</h3>
+  <div class="table-wrap">
+    <table class="series-table" id="actTable" aria-label="Họ Actini"></table>
+  </div>
+
+  <div class="legend">
+    <span class="alkali">Kim loại kiềm</span>
+    <span class="alkaline">Kim loại kiềm thổ</span>
+    <span class="transition">Kim loại chuyển tiếp</span>
+    <span class="post">Kim loại sau chuyển tiếp</span>
+    <span class="metalloid">Á kim</span>
+    <span class="nonmetal">Phi kim</span>
+    <span class="halogen">Halogen</span>
+    <span class="noble">Khí hiếm</span>
+    <span class="lanthanide">Họ Lantan</span>
+    <span class="actinide">Họ Actini</span>
+  </div>
+
+  <section class="stem-note">
+    <strong>Định hướng STEM (SGK Tin học 12 – HTML &amp; CSS):</strong>
+    <strong>S:</strong> Cấu trúc bảng tuần hoàn, tính chất vật lý &amp; hóa học riêng của từng nguyên tố •
+    <strong>T:</strong> Bảng HTML (<code>&lt;table&gt;</code>, <code>&lt;tr&gt;</code>, <code>&lt;th&gt;</code>, <code>&lt;td&gt;</code>) kết hợp CSS màu HEX/RGB •
+    <strong>E:</strong> Giao diện tra cứu, lọc nhóm và xem chi tiết trực quan •
+    <strong>M:</strong> Ma trận 7 chu kỳ × 18 nhóm chính xác theo tọa độ hàng – cột.
+  </section>
+
+  <div class="overlay" id="overlay" role="dialog" aria-modal="true">
+    <div class="modal" id="modal">
+      <div class="modal-top">
+        <div class="big-badge" id="badge">
+          <span id="mNumber"></span>
+          <strong id="mSymbol"></strong>
+        </div>
+        <div>
+          <h2 id="mNameVi"></h2>
+          <div class="en-name" id="mNameEn"></div>
+        </div>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Nguyên tử khối</label>
+          <value id="mMass"></value>
+        </div>
+        <div class="info-item">
+          <label>Phân loại</label>
+          <value id="mCategory"></value>
+        </div>
+        <div class="info-item">
+          <label>Chu kỳ / Nhóm</label>
+          <value id="mPos"></value>
+        </div>
+        <div class="info-item">
+          <label>Cấu hình electron</label>
+          <value id="mConfig"></value>
+        </div>
+      </div>
+
+      <div class="prop-box phys">
+        <strong>Tính chất vật lý riêng</strong>
+        <span id="mPhys"></span>
+      </div>
+
+      <div class="prop-box chem">
+        <strong>Tính chất hóa học riêng</strong>
+        <span id="mChem"></span>
+      </div>
+
+      <button class="close-btn" id="closeModal">Đóng (Esc)</button>
+    </div>
+  </div>
+
+  <script>
+    // Tính chất vật lý & hóa học riêng cho các nguyên tố tiêu biểu (theo Ký hiệu)
+    const specificProps = {
+      H: {
+        phys: "Chất khí không màu, không mùi, nhẹ nhất trong các chất khí (nhẹ hơn không khí khoảng 14,5 lần), hóa lỏng ở -252,9 °C, ít tan trong nước.",
+        chem: "Vừa có thể nhường 1e tạo H⁺, vừa có thể nhận 1e tạo ion hiđrua H⁻; cháy trong oxi tạo nước (2H₂ + O₂ → 2H₂O) và có tính khử ở nhiệt độ cao (khử được CuO, Fe₂O₃...)."
+      },
+      He: {
+        phys: "Chất khí trơ không màu, không mùi, không vị, khối lượng riêng rất nhỏ, nhiệt độ hóa lỏng thấp nhất (-268,9 °C) và không hóa rắn ở áp suất thường.",
+        chem: "Cấu hình bền 1s² nên trơ về mặt hóa học ở điều kiện thường, hầu như không tham gia phản ứng hóa học thông thường."
+      },
+      Li: {
+        phys: "Kim loại mềm màu trắng bạc, nhẹ nhất trong các kim loại (D ≈ 0,534 g/cm³), nổi trên nước, nóng chảy ở 180,5 °C.",
+        chem: "Có 1 electron hóa trị 2s¹, tính khử mạnh; phản ứng với nước tạo LiOH và H₂ nhưng êm dịu hơn Na và K; tác dụng trực tiếp với N₂ ở nhiệt độ thường tạo Li₃N."
+      },
+      Be: {
+        phys: "Kim loại màu xám bạc, tương đối cứng và giòn ở nhiệt độ thường, khối lượng riêng nhẹ (1,85 g/cm³), nóng chảy cao (1287 °C).",
+        chem: "Dễ tạo lớp màng oxit mỏng bền bảo vệ trên bề mặt nên bền với không khí; có tính lưỡng tính (tác dụng được với cả axit và dung dịch kiềm đặc)."
+      },
+      B: {
+        phys: "Á kim dạng bột nâu đen hoặc tinh thể cứng màu đen xám, có ánh kim yếu, nhiệt độ nóng chảy rất cao (trên 2000 °C), dẫn điện kém ở nhiệt độ thường.",
+        chem: "Thể hiện tính khử khi tác dụng với phi kim mạnh như flo, oxi ở nhiệt độ cao tạo BF₃, B₂O₃; không tan trực tiếp trong dung dịch HCl loãng."
+      },
+      C: {
+        phys: "Có nhiều dạng thù hình với tính chất vật lý khác nhau: kim cương rất cứng và không dẫn điện; than chì mềm, trơn, dẫn điện tốt; cacbon vô định hình màu đen, xốp có khả năng hấp phụ.",
+        chem: "Có 4 electron hóa trị nên chủ yếu tạo liên kết cộng hóa trị; thể hiện tính khử khi cháy trong O₂ tạo CO, CO₂ và khử oxit kim loại; cũng thể hiện tính oxi hóa khi tác dụng với kim loại tạo cacbua (như Al₄C₃, CaC₂)."
+      },
+      N: {
+        phys: "Chất khí không màu, không mùi, không vị, hóa lỏng ở -195,8 °C, ít tan trong nước, không duy trì sự cháy và sự hô hấp thông thường.",
+        chem: "Phân tử N₂ có liên kết ba bền vững nên ở nhiệt độ thường khá trơ; ở nhiệt độ cao hoặc có xúc tác thể hiện tính oxi hóa (tác dụng với Mg, Li, H₂ tạo NH₃) và tính khử (tác dụng với O₂ ở nhiệt độ rất cao hoặc tia lửa điện tạo NO)."
+      },
+      O: {
+        phys: "Chất khí không màu, không mùi, không vị, nặng hơn không khí một chút, hóa lỏng ở -183,0 °C, ít tan trong nước nhưng duy trì sự cháy và sự hô hấp.",
+        chem: "Là phi kim hoạt động mạnh, có tính oxi hóa mạnh (số oxi hóa phổ biến -2); oxi hóa trực tiếp hầu hết kim loại (trừ Au, Pt...) và nhiều phi kim, hợp chất hữu cơ."
+      },
+      F: {
+        phys: "Chất khí màu vàng lục nhạt, rất độc, mùi hắc, hóa lỏng ở -188,1 °C.",
+        chem: "Là phi kim và chất oxi hóa mạnh nhất (chỉ có số oxi hóa -1 trong hợp chất); phản ứng mãnh liệt với hầu hết mọi chất, kể cả nước (đốt cháy nước tạo HF và O₂) và thủy tinh."
+      },
+      Ne: {
+        phys: "Chất khí không màu, không mùi, hóa lỏng ở -246,1 °C; khi phóng điện trong ống khí neon phát ra ánh sáng đỏ cam đặc trưng.",
+        chem: "Cấu hình bão hòa [He] 2s²2p⁶ nên rất trơ về mặt hóa học, chưa tạo được hợp chất bền ở điều kiện thường."
+      },
+      Na: {
+        phys: "Kim loại mềm màu trắng bạc, có ánh kim, dễ cắt bằng dao, khối lượng riêng nhỏ (0,97 g/cm³), nóng chảy ở 97,8 °C, dẫn điện và dẫn nhiệt tốt.",
+        chem: "Có 1 electron hóa trị 3s¹, tính khử rất mạnh; phản ứng mạnh với oxi, clo và mãnh liệt với nước tạo NaOH, H₂ và tỏa nhiều nhiệt."
+      },
+      Mg: {
+        phys: "Kim loại màu trắng bạc, nhẹ (D ≈ 1,74 g/cm³), dễ dát mỏng, kéo sợi, nóng chảy ở 650 °C, dẫn điện tốt.",
+        chem: "Có 2 electron hóa trị 3s², tính khử mạnh; cháy trong oxi với ngọn lửa sáng chói tạo MgO, phản ứng với axit mạnh giải phóng H₂ và tác dụng với hơi nước ở nhiệt độ cao."
+      },
+      Al: {
+        phys: "Kim loại màu trắng bạc, nhẹ (D ≈ 2,7 g/cm³), dẻo, dễ kéo sợi và dát mỏng, nóng chảy ở 660,3 °C, dẫn điện và dẫn nhiệt tốt (chỉ kém Ag, Cu, Au).",
+        chem: "Có 3 electron hóa trị (3s²3p¹), tính khử mạnh; có lớp màng Al₂O₃ mỏng bền bảo vệ; tác dụng với phi kim, axit, dung dịch kiềm (giải phóng H₂) và bị thụ động hóa bởi HNO₃ đặc nguội, H₂SO₄ đặc nguội."
+      },
+      Si: {
+        phys: "Á kim dạng tinh thể màu xám xanh, có ánh kim, giòn, khối lượng riêng 2,33 g/cm³, nhiệt độ nóng chảy cao (1414 °C), là chất bán dẫn quan trọng.",
+        chem: "Có 4 electron hóa trị; thể hiện tính khử khi tác dụng với O₂, F₂, Cl₂ hoặc dung dịch kiềm đặc (tạo muối silicat và H₂), đồng thời có thể hiện tính oxi hóa khi tác dụng với một số kim loại ở nhiệt độ cao tạo silixua."
+      },
+      P: {
+        phys: "Có các dạng thù hình phổ biến như photpho trắng (rắn mềm màu trắng/vàng nhạt, rất độc, tự bốc cháy trong không khí) và photpho đỏ (rắn màu đỏ, bền hơn, khó bốc cháy).",
+        chem: "Có 5 electron hóa trị; thể hiện tính oxi hóa khi tác dụng với nhiều kim loại ở nhiệt độ cao tạo photphua (như Ca₃P₂) và tính khử khi tác dụng với oxi, clo, chất oxi hóa mạnh tạo P₂O₅, PCl₃, H₃PO₄."
+      },
+      S: {
+        phys: "Chất rắn màu vàng, giòn, không dẫn điện, không tan trong nước, tan trong dung môi hữu cơ như CS₂; có nhiều dạng tinh thể và biến đổi độ nhớt khi đun nóng chảy.",
+        chem: "Có các mức oxi hóa -2, 0, +4, +6; vừa có tính oxi hóa (tác dụng với kim loại tạo sunfua, với H₂ tạo H₂S; đặc biệt tác dụng với Hg ngay ở nhiệt độ thường) vừa có tính khử (tác dụng với O₂ tạo SO₂, với chất oxi hóa mạnh)."
+      },
+      Cl: {
+        phys: "Chất khí màu vàng lục, mùi xốc, độc, nặng hơn không khí (khoảng 2,5 lần), hóa lỏng ở -34,0 °C, tan một phần trong nước tạo nước clo.",
+        chem: "Là phi kim hoạt động mạnh với tính oxi hóa mạnh (số oxi hóa -1, +1, +3, +5, +7); tác dụng trực tiếp với hầu hết kim loại, với hiđrô, phản ứng thuận nghịch với nước và tác dụng mạnh với dung dịch kiềm."
+      },
+      Ar: {
+        phys: "Chất khí không màu, không mùi, không vị, nặng hơn không khí, hóa lỏng ở -185,8 °C, chiếm khoảng 0,93% thể tích không khí.",
+        chem: "Cấu hình electron lớp ngoài cùng bền vững ([Ne] 3s²3p⁶) nên rất trơ về mặt hóa học, thường dùng làm khí quyển bảo vệ trong hàn điện và bóng đèn."
+      },
+      K: {
+        phys: "Kim loại mềm màu trắng bạc, nhẹ (D ≈ 0,86 g/cm³), nóng chảy ở 63,5 °C, dễ cắt và dễ bị oxi hóa nhanh ngoài không khí.",
+        chem: "Có 1 electron hóa trị 4s¹, tính khử cực mạnh (mạnh hơn Na); phản ứng rất mãnh liệt với nước tạo KOH, H₂ và thường bốc cháy kèm ngọn lửa tím."
+      },
+      Ca: {
+        phys: "Kim loại màu trắng bạc, mềm hơn nhôm, khối lượng riêng 1,55 g/cm³, nóng chảy ở 842 °C.",
+        chem: "Có 2 electron hóa trị 4s², tính khử mạnh; tác dụng trực tiếp với oxi, phi kim, axit và phản ứng mạnh với nước ở nhiệt độ thường tạo Ca(OH)₂ và H₂."
+      },
+      Fe: {
+        phys: "Kim loại màu trắng xám, có ánh kim, dẻo, dễ rèn, khối lượng riêng 7,87 g/cm³, nóng chảy ở 1538 °C, dẫn điện và dẫn nhiệt tốt, có tính nhiễm từ mạnh.",
+        chem: "Có tính khử trung bình (số oxi hóa phổ biến +2, +3); tác dụng với oxi, clo, lưu huỳnh, dung dịch axit (HCl, H₂SO₄ loãng tạo muối sắt(II) + H₂; HNO₃ đặc nóng hoặc H₂SO₄ đặc nóng oxi hóa lên sắt(III)) và đẩy được kim loại yếu hơn khỏi dung dịch muối."
+      },
+      Cu: {
+        phys: "Kim loại màu đỏ cam, có ánh kim, rất dẻo, dễ kéo sợi và dát mỏng, khối lượng riêng 8,96 g/cm³, nóng chảy ở 1084,6 °C, dẫn điện và dẫn nhiệt rất tốt (chỉ sau bạc).",
+        chem: "Kim loại kém hoạt động hơn hiđrô nên không đẩy được H₂ từ dung dịch HCl, H₂SO₄ loãng; thể hiện tính khử khi đun nóng với O₂, Cl₂, S hoặc tác dụng với dung dịch HNO₃, H₂SO₄ đặc, dung dịch muối Ag⁺, Fe³⁺."
+      },
+      Zn: {
+        phys: "Kim loại màu lam nhạt, có ánh kim, hơi giòn ở nhiệt độ thường nhưng dẻo ở 100–150 °C, khối lượng riêng 7,14 g/cm³, nóng chảy ở 419,5 °C.",
+        chem: "Có tính khử khá mạnh (số oxi hóa +2); tác dụng với phi kim ở nhiệt độ cao, tác dụng với dung dịch axit giải phóng H₂ và tan được trong dung dịch kiềm đặc tạo phức kẽmat."
+      },
+      Ag: {
+        phys: "Kim loại màu trắng bạc, có ánh kim rực rỡ, rất dẻo, dễ dát mỏng, khối lượng riêng 10,49 g/cm³, nóng chảy ở 961,8 °C, dẫn điện và dẫn nhiệt tốt nhất trong các kim loại.",
+        chem: "Là kim loại kém hoạt động, không tác dụng với nước và oxi ở nhiệt độ thường; phản ứng với H₂S hoặc O₃ (tạo Ag₂S màu đen làm bạc bị xỉn), tan trong HNO₃ hoặc H₂SO₄ đặc nóng."
+      },
+      Au: {
+        phys: "Kim loại màu vàng sáng, ánh kim đẹp, cực kỳ dẻo (dễ dát mỏng tới mức xuyên sáng và kéo sợi rất mảnh), khối lượng riêng cao (19,3 g/cm³), nóng chảy ở 1064,2 °C, dẫn điện và dẫn nhiệt tốt.",
+        chem: "Là kim loại rất kém hoạt động, không bị oxi hóa bởi không khí hay nước ở mọi nhiệt độ, không tan trong HCl hay HNO₃ riêng rẽ; chỉ tan trong nước cường toan (hỗn hợp HCl đặc và HNO₃ đặc theo tỉ lệ 3:1) hoặc dung dịch xyanua có oxi."
+      },
+      Hg: {
+        phys: "Kim loại duy nhất ở thể lỏng tại điều kiện thường (nóng chảy ở -38,8 °C), màu trắng bạc sáng bóng, khối lượng riêng rất lớn (13,53 g/cm³), hơi thủy ngân rất độc.",
+        chem: "Kém hoạt động hơn hiđrô, không đẩy được H₂ từ axit; phản ứng trực tiếp với lưu huỳnh ngay ở nhiệt độ thường (dùng để xử lý thủy ngân rơi vãi), tác dụng với HNO₃, H₂SO₄ đặc nóng và tạo hỗn hống với nhiều kim loại."
+      },
+      I: {
+        phys: "Chất rắn dạng tinh thể màu tím đen, có ánh kim yếu, dễ thăng hoa khi đun nhẹ tạo hơi màu tím; ít tan trong nước, tan tốt hơn trong dung môi hữu cơ hoặc dung dịch KI.",
+        chem: "Là halogen có tính oxi hóa yếu hơn F₂, Cl₂, Br₂ nhưng vẫn thể hiện tính oxi hóa (tác dụng với kim loại ở nhiệt độ cao, làm xanh hồ tinh bột); cũng có thể hiện tính khử trong một số phản ứng."
+      }
+    };
+
+    const categoryLabels = {
+      alkali: "Kim loại kiềm",
+      alkaline: "Kim loại kiềm thổ",
+      transition: "Kim loại chuyển tiếp",
+      post: "Kim loại sau chuyển tiếp",
+      metalloid: "Á kim",
+      nonmetal: "Phi kim",
+      halogen: "Halogen",
+      noble: "Khí hiếm",
+      lanthanide: "Họ Lantan",
+      actinide: "Họ Actini"
+    };
+
+    const rawData = `
+H|Hydrogen|Hiđrô|1|1|1|1.008|1s1|nonmetal
+He|Helium|Hêli|2|1|18|4.0026|1s2|noble
+Li|Lithium|Liti|3|2|1|6.94|[He] 2s1|alkali
+Be|Beryllium|Berili|4|2|2|9.0122|[He] 2s2|alkaline
+B|Boron|Bo|5|2|13|10.81|[He] 2s2 2p1|metalloid
+C|Carbon|Cacbon|6|2|14|12.011|[He] 2s2 2p2|nonmetal
+N|Nitrogen|Nitơ|7|2|15|14.007|[He] 2s2 2p3|nonmetal
+O|Oxygen|Oxi|8|2|16|15.999|[He] 2s2 2p4|nonmetal
+F|Fluorine|Flo|9|2|17|18.998|[He] 2s2 2p5|halogen
+Ne|Neon|Neon|10|2|18|20.180|[He] 2s2 2p6|noble
+Na|Sodium|Natri|11|3|1|22.990|[Ne] 3s1|alkali
+Mg|Magnesium|Magie|12|3|2|24.305|[Ne] 3s2|alkaline
+Al|Aluminium|Nhôm|13|3|13|26.982|[Ne] 3s2 3p1|post
+Si|Silicon|Silic|14|3|14|28.085|[Ne] 3s2 3p2|metalloid
+P|Phosphorus|Photpho|15|3|15|30.974|[Ne] 3s2 3p3|nonmetal
+S|Sulfur|Lưu huỳnh|16|3|16|32.06|[Ne] 3s2 3p4|nonmetal
+Cl|Chlorine|Clo|17|3|17|35.45|[Ne] 3s2 3p5|halogen
+Ar|Argon|Argon|18|3|18|39.948|[Ne] 3s2 3p6|noble
+K|Potassium|Kali|19|4|1|39.098|[Ar] 4s1|alkali
+Ca|Calcium|Canxi|20|4|2|40.078|[Ar] 4s2|alkaline
+Sc|Scandium|Scandi|21|4|3|44.956|[Ar] 3d1 4s2|transition
+Ti|Titanium|Titan|22|4|4|47.867|[Ar] 3d2 4s2|transition
+V|Vanadium|Vanadi|23|4|5|50.942|[Ar] 3d3 4s2|transition
+Cr|Chromium|Crom|24|4|6|51.996|[Ar] 3d5 4s1|transition
+Mn|Manganese|Mangan|25|4|7|54.938|[Ar] 3d5 4s2|transition
+Fe|Iron|Sắt|26|4|8|55.845|[Ar] 3d6 4s2|transition
+Co|Cobalt|Coban|27|4|9|58.933|[Ar] 3d7 4s2|transition
+Ni|Nickel|Niken|28|4|10|58.693|[Ar] 3d8 4s2|transition
+Cu|Copper|Đồng|29|4|11|63.546|[Ar] 3d10 4s1|transition
+Zn|Zinc|Kẽm|30|4|12|65.38|[Ar] 3d10 4s2|transition
+Ga|Gallium|Gali|31|4|13|69.723|[Ar] 3d10 4s2 4p1|post
+Ge|Germanium|Germani|32|4|14|72.630|[Ar] 3d10 4s2 4p2|metalloid
+As|Arsenic|Asen|33|4|15|74.922|[Ar] 3d10 4s2 4p3|metalloid
+Se|Selenium|Selen|34|4|16|78.971|[Ar] 3d10 4s2 4p4|nonmetal
+Br|Bromine|Brom|35|4|17|79.904|[Ar] 3d10 4s2 4p5|halogen
+Kr|Krypton|Kripton|36|4|18|83.798|[Ar] 3d10 4s2 4p6|noble
+Rb|Rubidium|Rubiđi|37|5|1|85.468|[Kr] 5s1|alkali
+Sr|Strontium|Stronti|38|5|2|87.62|[Kr] 5s2|alkaline
+Y|Yttrium|Ytri|39|5|3|88.906|[Kr] 4d1 5s2|transition
+Zr|Zirconium|Zirconi|40|5|4|91.224|[Kr] 4d2 5s2|transition
+Nb|Niobium|Niobi|41|5|5|92.906|[Kr] 4d4 5s1|transition
+Mo|Molybdenum|Molipđen|42|5|6|95.95|[Kr] 4d5 5s1|transition
+Tc|Technetium|Tecneti|43|5|7|(98)|[Kr] 4d5 5s2|transition
+Ru|Ruthenium|Ruteni|44|5|8|101.07|[Kr] 4d7 5s1|transition
+Rh|Rhodium|Rođi|45|5|9|102.91|[Kr] 4d8 5s1|transition
+Pd|Palladium|Paladi|46|5|10|106.42|[Kr] 4d10|transition
+Ag|Silver|Bạc|47|5|11|107.87|[Kr] 4d10 5s1|transition
+Cd|Cadmium|Cađimi|48|5|12|112.41|[Kr] 4d10 5s2|transition
+In|Indium|Inđi|49|5|13|114.82|[Kr] 4d10 5s2 5p1|post
+Sn|Tin|Thiếc|50|5|14|118.71|[Kr] 4d10 5s2 5p2|post
+Sb|Antimony|Antimon|51|5|15|121.76|[Kr] 4d10 5s2 5p3|metalloid
+Te|Tellurium|Telu|52|5|16|127.60|[Kr] 4d10 5s2 5p4|metalloid
+I|Iodine|Iốt|53|5|17|126.90|[Kr] 4d10 5s2 5p5|halogen
+Xe|Xenon|Xenon|54|5|18|131.29|[Kr] 4d10 5s2 5p6|noble
+Cs|Cesium|Xesi|55|6|1|132.91|[Xe] 6s1|alkali
+Ba|Barium|Bari|56|6|2|137.33|[Xe] 6s2|alkaline
+La|Lanthanum|Lantan|57|6|3|138.91|[Xe] 5d1 6s2|lanthanide
+Ce|Cerium|Xeri|58|6|4|140.12|[Xe] 4f1 5d1 6s2|lanthanide
+Pr|Praseodymium|Prazeođim|59|6|5|140.91|[Xe] 4f3 6s2|lanthanide
+Nd|Neodymium|Neođim|60|6|6|144.24|[Xe] 4f4 6s2|lanthanide
+Pm|Promethium|Prometi|61|6|7|(145)|[Xe] 4f5 6s2|lanthanide
+Sm|Samarium|Samari|62|6|8|150.36|[Xe] 4f6 6s2|lanthanide
+Eu|Europium|Europi|63|6|9|151.96|[Xe] 4f7 6s2|lanthanide
+Gd|Gadolinium|Gađolini|64|6|10|157.25|[Xe] 4f7 5d1 6s2|lanthanide
+Tb|Terbium|Tecbi|65|6|11|158.93|[Xe] 4f9 6s2|lanthanide
+Dy|Dysprosium|Điprozi|66|6|12|162.50|[Xe] 4f10 6s2|lanthanide
+Ho|Holmium|Honmi|67|6|13|164.93|[Xe] 4f11 6s2|lanthanide
+Er|Erbium|Ecbi|68|6|14|167.26|[Xe] 4f12 6s2|lanthanide
+Tm|Thulium|Tuli|69|6|15|168.93|[Xe] 4f13 6s2|lanthanide
+Yb|Ytterbium|Ytecbi|70|6|16|173.05|[Xe] 4f14 6s2|lanthanide
+Lu|Lutetium|Lutexi|71|6|17|174.97|[Xe] 4f14 5d1 6s2|lanthanide
+Hf|Hafnium|Hafni|72|6|4|178.49|[Xe] 4f14 5d2 6s2|transition
+Ta|Tantalum|Tantan|73|6|5|180.95|[Xe] 4f14 5d3 6s2|transition
+W|Tungsten|Vonfram|74|6|6|183.84|[Xe] 4f14 5d4 6s2|transition
+Re|Rhenium|Reni|75|6|7|186.21|[Xe] 4f14 5d5 6s2|transition
+Os|Osmium|Osmi|76|6|8|190.23|[Xe] 4f14 5d6 6s2|transition
+Ir|Iridium|Iriđi|77|6|9|192.22|[Xe] 4f14 5d7 6s2|transition
+Pt|Platinum|Platin|78|6|10|195.08|[Xe] 4f14 5d9 6s1|transition
+Au|Gold|Vàng|79|6|11|196.97|[Xe] 4f14 5d10 6s1|transition
+Hg|Mercury|Thủy ngân|80|6|12|200.59|[Xe] 4f14 5d10 6s2|transition
+Tl|Thallium|Tali|81|6|13|204.38|[Xe] 4f14 5d10 6s2 6p1|post
+Pb|Lead|Chì|82|6|14|207.2|[Xe] 4f14 5d10 6s2 6p2|post
+Bi|Bismuth|Bitmut|83|6|15|208.98|[Xe] 4f14 5d10 6s2 6p3|post
+Po|Polonium|Poloni|84|6|16|(209)|[Xe] 4f14 5d10 6s2 6p4|metalloid
+At|Astatine|Atatin|85|6|17|(210)|[Xe] 4f14 5d10 6s2 6p5|halogen
+Rn|Radon|Rađon|86|6|18|(222)|[Xe] 4f14 5d10 6s2 6p6|noble
+Fr|Francium|Franxi|87|7|1|(223)|[Rn] 7s1|alkali
+Ra|Radium|Rađi|88|7|2|(226)|[Rn] 7s2|alkaline
+Ac|Actinium|Actini|89|7|3|(227)|[Rn] 6d1 7s2|actinide
+Th|Thorium|Thori|90|7|4|232.04|[Rn] 6d2 7s2|actinide
+Pa|Protactinium|Protactini|91|7|5|231.04|[Rn] 5f2 6d1 7s2|actinide
+U|Uranium|Urani|92|7|6|238.03|[Rn] 5f3 6d1 7s2|actinide
+Np|Neptunium|Neptuni|93|7|7|(237)|[Rn] 5f4 6d1 7s2|actinide
+Pu|Plutonium|Plutoni|94|7|8|(244)|[Rn] 5f6 7s2|actinide
+Am|Americium|Amerixi|95|7|9|(243)|[Rn] 5f7 7s2|actinide
+Cm|Curium|Curi|96|7|10|(247)|[Rn] 5f7 6d1 7s2|actinide
+Bk|Berkelium|Berkeli|97|7|11|(247)|[Rn] 5f9 7s2|actinide
+Cf|Californium|Californi|98|7|12|(251)|[Rn] 5f10 7s2|actinide
+Es|Einsteinium|Einsteini|99|7|13|(252)|[Rn] 5f11 7s2|actinide
+Fm|Fermium|Fecmi|100|7|14|(257)|[Rn] 5f12 7s2|actinide
+Md|Mendelevium|Mendelevi|101|7|15|(258)|[Rn] 5f13 7s2|actinide
+No|Nobelium|Nobeli|102|7|16|(259)|[Rn] 5f14 7s2|actinide
+Lr|Lawrencium|Lawrenxi|103|7|17|(266)|[Rn] 5f14 7p1 7s2|actinide
+Rf|Rutherfordium|Rutherfordi|104|7|4|(267)|[Rn] 5f14 6d2 7s2|transition
+Db|Dubnium|Dubni|105|7|5|(268)|[Rn] 5f14 6d3 7s2|transition
+Sg|Seaborgium|Seaborgi|106|7|6|(269)|[Rn] 5f14 6d4 7s2|transition
+Bh|Bohrium|Bohri|107|7|7|(270)|[Rn] 5f14 6d5 7s2|transition
+Hs|Hassium|Hassi|108|7|8|(277)|[Rn] 5f14 6d6 7s2|transition
+Mt|Meitnerium|Meitneri|109|7|9|(278)|[Rn] 5f14 6d7 7s2|transition
+Ds|Darmstadtium|Darmstadti|110|7|10|(281)|[Rn] 5f14 6d8 7s2|transition
+Rg|Roentgenium|Roentgeni|111|7|11|(282)|[Rn] 5f14 6d9 7s2|transition
+Cn|Copernicium|Copernici|112|7|12|(285)|[Rn] 5f14 6d10 7s2|transition
+Nh|Nihonium|Nihoni|113|7|13|(286)|[Rn] 5f14 6d10 7s2 7p1|post
+Fl|Flerovium|Flerovi|114|7|14|(289)|[Rn] 5f14 6d10 7s2 7p2|post
+Mc|Moscovium|Moscovi|115|7|15|(290)|[Rn] 5f14 6d10 7s2 7p3|post
+Lv|Livermorium|Livermori|116|7|16|(293)|[Rn] 5f14 6d10 7s2 7p4|post
+Ts|Tennessine|Tennessin|117|7|17|(294)|[Rn] 5f14 6d10 7s2 7p5|halogen
+Og|Oganesson|Oganesson|118|7|18|(294)|[Rn] 5f14 6d10 7s2 7p6|noble
+`;
+
+    function getElementProperties(el) {
+      if (specificProps[el.symbol]) {
+        return specificProps[el.symbol];
+      }
+
+      const groupName = categoryLabels[el.cat] || el.cat;
+      let phys = `Nguyên tố ${el.nameVi} (${el.symbol}) có số hiệu nguyên tử ${el.number}, nguyên tử khối khoảng ${el.mass} u, thuộc chu kỳ ${el.period}, nhóm ${el.group}. `;
+      let chem = `Với cấu hình electron ${el.config} và thuộc nhóm ${groupName}, ${el.nameVi} (${el.symbol}) mang đặc điểm hóa học riêng của vị trí trong bảng tuần hoàn. `;
+
+      if (el.cat === "alkali") {
+        phys += "Là kim loại kiềm mềm, màu trắng bạc, có ánh kim và khối lượng riêng nhỏ.";
+        chem += "Dễ nhường 1 electron lớp ngoài cùng tạo ion +1, có tính khử rất mạnh và phản ứng mãnh liệt với nước tạo hiđroxit kiềm cùng khí H₂.";
+      } else if (el.cat === "alkaline") {
+        phys += "Là kim loại kiềm thổ có ánh kim, dẫn điện và dẫn nhiệt tốt.";
+        chem += "Có xu hướng nhường 2 electron hóa trị tạo ion +2, thể hiện tính khử mạnh trong phản ứng với phi kim, axit và nước (tùy nguyên tố).";
+      } else if (el.cat === "transition") {
+        phys += el.number >= 104
+          ? "Là nguyên tố chuyển tiếp nặng, có tính phóng xạ và chỉ được tạo ra với lượng rất nhỏ trong phòng thí nghiệm."
+          : "Là kim loại chuyển tiếp rắn, có ánh kim, dẫn điện và dẫn nhiệt tốt, nhiệt độ nóng chảy thường cao.";
+        chem += el.number >= 104
+          ? "Chủ yếu được nghiên cứu về tính chất hạt nhân và xu hướng hóa học tương tự các nguyên tố cùng nhóm chuyển tiếp."
+          : "Có nhiều trạng thái oxi hóa khác nhau nhờ electron phân lớp d, dễ tạo hợp chất có màu và hợp chất phức.";
+      } else if (el.cat === "post") {
+        phys += el.number >= 113
+          ? "Là kim loại sau chuyển tiếp siêu nặng, phóng xạ, thời gian bán rã rất ngắn."
+          : "Là kim loại sau chuyển tiếp có tính dẻo hoặc tính kim loại đặc trưng vùng p.";
+        chem += el.number >= 113
+          ? "Được tổng hợp nhân tạo với số nguyên tử rất ít, tính chất hóa học chủ yếu được dự đoán theo quy luật nhóm."
+          : "Thể hiện tính khử khi tác dụng với phi kim và axit, một số trường hợp thể hiện tính chất lưỡng tính.";
+      } else if (el.cat === "metalloid") {
+        phys += "Là á kim mang tính chất trung gian giữa kim loại và phi kim, có tính chất bán dẫn đặc trưng.";
+        chem += "Vừa có thể thể hiện tính khử vừa có thể thể hiện tính oxi hóa tùy thuộc vào chất tham gia phản ứng.";
+      } else if (el.cat === "nonmetal") {
+        phys += "Là phi kim không có ánh kim, dẫn điện và dẫn nhiệt kém.";
+        chem += "Có xu hướng nhận thêm electron hoặc dùng chung electron để đạt cấu hình bền, thể hiện tính oxi hóa hoặc tính khử tùy phản ứng.";
+      } else if (el.cat === "halogen") {
+        phys += el.number === 117
+          ? "Là nguyên tố halogen nặng nhất (siêu nặng, phóng xạ), được tổng hợp nhân tạo."
+          : "Là halogen có tính độc và tính bay hơi đặc trưng của nhóm VIIA.";
+        chem += el.number === 117
+          ? "Mang các đặc trưng dự đoán của nhóm halogen nhưng phân rã phóng xạ rất nhanh."
+          : "Là phi kim có tính oxi hóa mạnh, dễ nhận 1 electron để đạt mức oxi hóa -1 trong hợp chất.";
+      } else if (el.cat === "noble") {
+        phys += el.number === 118
+          ? "Là nguyên tố khí hiếm siêu nặng, phóng xạ, được điều chế bằng phản ứng hạt nhân."
+          : "Là khí hiếm đơn nguyên tử, không màu, không mùi ở điều kiện thường, nhiệt độ sôi thấp.";
+        chem += el.number === 118
+          ? "Có cấu hình lớp ngoài cùng 7s²7p⁶ nhưng hiệu ứng tương đối tính khiến tính chất có thể khác biệt một phần so với khí hiếm nhẹ."
+          : "Có lớp electron ngoài cùng bão hòa nên rất khó tham gia phản ứng hóa học thông thường.";
+      } else if (el.cat === "lanthanide") {
+        phys += "Là kim loại thuộc họ Lantan (đất hiếm), màu trắng bạc, có ánh kim và nhiệt độ nóng chảy cao.";
+        chem += "Chủ yếu điền electron vào phân lớp 4f, có số oxi hóa đặc trưng là +3 và thể hiện tính khử của kim loại.";
+      } else if (el.cat === "actinide") {
+        phys += "Là kim loại thuộc họ Actini có tính phóng xạ.";
+        chem += "Điền electron vào phân lớp 5f, có nhiều trạng thái oxi hóa và tham gia các quá trình phân rã hoặc phản ứng hạt nhân.";
+      }
+
+      return { phys, chem };
+    }
+
+    const elements = rawData.trim().split("\n").map(line => {
+      const [symbol, nameEn, nameVi, number, period, group, mass, config, cat] = line.split("|");
+      return {
+        symbol,
+        nameEn,
+        nameVi,
+        number: Number(number),
+        period: Number(period),
+        group: Number(group),
+        mass,
+        config,
+        cat
+      };
+    });
+
+    const periodicTableEl = document.getElementById("periodicTable");
+    const lanthTableEl = document.getElementById("lanthTable");
+    const actTableEl = document.getElementById("actTable");
+    const searchInput = document.getElementById("search");
+    const clearSearchBtn = document.getElementById("clearSearch");
+    const statusBar = document.getElementById("statusBar");
+    const overlay = document.getElementById("overlay");
+
+    let currentFilter = "all";
+
+    function createCellDiv(el) {
+      const div = document.createElement("div");
+      div.className = `cell ${el.cat}`;
+      div.dataset.number = el.number;
+      div.innerHTML = `
+        <div class="num-row">
+          <span>${el.number}</span>
+          <span class="mass-mini">${el.mass}</span>
+        </div>
+        <div class="sym">${el.symbol}</div>
+        <div class="nam" title="${el.nameVi} (${el.nameEn})">${el.nameVi}</div>
+      `;
+      div.addEventListener("click", () => openModal(el));
+      return div;
+    }
+
+    function renderTables() {
+      periodicTableEl.innerHTML = "";
+      const thead = document.createElement("thead");
+      const headRow = document.createElement("tr");
+
+      const corner = document.createElement("th");
+      corner.className = "corner-cell";
+      corner.textContent = "CK\\N";
+      headRow.appendChild(corner);
+
+      for (let g = 1; g <= 18; g++) {
+        const th = document.createElement("th");
+        th.className = "axis-col";
+        th.textContent = g;
+        headRow.appendChild(th);
+      }
+      thead.appendChild(headRow);
+      periodicTableEl.appendChild(thead);
+
+      const tbody = document.createElement("tbody");
+      for (let p = 1; p <= 7; p++) {
+        const tr = document.createElement("tr");
+        const rowHeader = document.createElement("th");
+        rowHeader.className = "axis-row";
+        rowHeader.textContent = p;
+        tr.appendChild(rowHeader);
+
+        for (let g = 1; g <= 18; g++) {
+          const td = document.createElement("td");
+
+          if (p === 6 && g === 3) {
+            td.className = "marker-td";
+            td.innerHTML = `<div class="marker-box">57–71</div>`;
+          } else if (p === 7 && g === 3) {
+            td.className = "marker-td";
+            td.innerHTML = `<div class="marker-box">89–103</div>`;
+          } else {
+            const found = elements.find(
+              x => x.period === p && x.group === g && !["lanthanide", "actinide"].includes(x.cat)
+            );
+            if (found) {
+              td.className = "el-td";
+              td.appendChild(createCellDiv(found));
+            } else {
+              td.className = "empty-td";
+            }
+          }
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      }
+      periodicTableEl.appendChild(tbody);
+
+      renderSeriesTable(lanthTableEl, elements.filter(e => e.cat === "lanthanide"), "LN");
+      renderSeriesTable(actTableEl, elements.filter(e => e.cat === "actinide"), "AC");
+    }
+
+    function renderSeriesTable(tableEl, list, label) {
+      tableEl.innerHTML = "";
+      const tbody = document.createElement("tbody");
+      const tr = document.createElement("tr");
+
+      const th = document.createElement("th");
+      th.className = "axis-row";
+      th.textContent = label;
+      tr.appendChild(th);
+
+      list.forEach(el => {
+        const td = document.createElement("td");
+        td.className = "el-td";
+        td.appendChild(createCellDiv(el));
+        tr.appendChild(td);
+      });
+
+      tbody.appendChild(tr);
+      tableEl.appendChild(tbody);
+    }
+
+    function applyFilter() {
+      const query = searchInput.value.trim().toLowerCase();
+      let matchedCount = 0;
+
+      document.querySelectorAll(".cell").forEach(cell => {
+        const el = elements.find(x => x.number === Number(cell.dataset.number));
+        const matchesCat = currentFilter === "all" || el.cat === currentFilter;
+        const matchesText =
+          !query ||
+          el.nameVi.toLowerCase().includes(query) ||
+          el.nameEn.toLowerCase().includes(query) ||
+          el.symbol.toLowerCase().includes(query) ||
+          String(el.number) === query;
+
+        const isMatch = matchesCat && matchesText;
+        cell.classList.toggle("dimmed", !isMatch);
+        cell.classList.toggle("highlighted", Boolean(query) && isMatch);
+
+        if (isMatch) matchedCount++;
+      });
+
+      statusBar.textContent = `Đang khớp ${matchedCount} / ${elements.length} nguyên tố`;
+    }
+
+    function openModal(el) {
+      const badge = document.getElementById("badge");
+      const props = getElementProperties(el);
+      badge.className = `big-badge ${el.cat}`;
+      document.getElementById("mNumber").textContent = `#${el.number}`;
+      document.getElementById("mSymbol").textContent = el.symbol;
+      document.getElementById("mNameVi").textContent = el.nameVi;
+      document.getElementById("mNameEn").textContent = el.nameEn;
+      document.getElementById("mMass").textContent = `${el.mass} u`;
+      document.getElementById("mCategory").textContent = categoryLabels[el.cat] || el.cat;
+      document.getElementById("mPos").textContent = `Chu kỳ ${el.period} • Nhóm ${el.group}`;
+      document.getElementById("mConfig").textContent = el.config;
+      document.getElementById("mPhys").textContent = props.phys;
+      document.getElementById("mChem").textContent = props.chem;
+      overlay.classList.add("open");
+    }
+
+    function closeModal() {
+      overlay.classList.remove("open");
+    }
+
+    searchInput.addEventListener("input", applyFilter);
+    clearSearchBtn.addEventListener("click", () => {
+      searchInput.value = "";
+      applyFilter();
+      searchInput.focus();
+    });
+
+    document.querySelectorAll("#filters .filter-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("#filters .filter-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentFilter = btn.dataset.cat;
+        applyFilter();
+      });
+    });
+
+    document.getElementById("closeModal").addEventListener("click", closeModal);
+    overlay.addEventListener("click", e => {
+      if (e.target === overlay) closeModal();
+    });
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") closeModal();
+    });
+
+    renderTables();
+    applyFilter();
+  </script>
+</body>
+</html>
